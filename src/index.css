@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #0b0b29; 
+  overflow-x: hidden;
+}
+
+.logo {
+  width: 80%;
+}
+
+.logo-moible {
+  width: 50%;
+  margin: auto;
+}
+
+.head-bg {
+  background: #000;
+}
+
+.nevs:hover {
+  background-color: rgba(37, 26, 196, 0.233);
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+
+.PageBG {
+  background-color: rgba(0, 0, 0, 0.315);
+}
+
+td,
+tr,
+th {
+  padding: 5px 70px;
+
+
+}
+
+
+.active {
+  background-color: rgb(64, 42, 184);
+}
+
+
+button,select,input{
+  outline: none;
+}
+
+
+.bottom-c {
+  bottom: 10rem;
+}
