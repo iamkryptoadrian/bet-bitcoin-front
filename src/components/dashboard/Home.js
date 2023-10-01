@@ -327,42 +327,50 @@ function Home() {
                   <th className="bg-black/50 text-white py-3">Result</th>
                 </tr>
               </thead>
-              <tbody className="text-white">
-                {betTransaction.length > 0 ? (
-                  betTransaction.map((item, index) => (
-                    <tr key={index}>
-                      <td className="py-1 hover:bg-black/20">
-                        {(() => {
-                          const date = new Date(item.date);
-                          const formattedDate = `${date.getFullYear()}-${String(
-                            date.getMonth() + 1,
-                          ).padStart(2, "0")}-${String(date.getDate()).padStart(
-                            2,
-                            "0",
-                          )} / ${String(date.getHours()).padStart(2, "0")}:${String(
-                            date.getMinutes(),
-                          ).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
-                          return formattedDate;
-                        })()}
-<Countdown 
-  duration={parseInt(item.duration)} 
-  originDate={item.date}
-  onComplete={() => console.log()} 
-/>
-                      </td>
-                      <td className="py-1 hover:bg-black/20">{item.prediction}</td>
-                      <td className="py-1 hover:bg-black/20">{item.amount}</td>
-                      <td className="py-1 hover:bg-black/20">{item.profit}</td>
-                      <td className="py-1 hover:bg-black/20">{item.result}</td>
-                      {/* Adding countdown based on the duration */}
+                <tbody className="text-white">
+                  {betTransaction.length > 0 ? (
+                    betTransaction.map((item, index) => {
+                      const date = new Date(item.date);
+                      const currentTime = new Date();
+                    
+                      // Determine if the transaction was added within the past hour (3600000 ms)
+                      const isNew = (currentTime.getTime() - date.getTime()) < 3600000;
+                    
+                      const formattedDate = `${date.getFullYear()}-${String(
+                        date.getMonth() + 1,
+                      ).padStart(2, "0")}-${String(date.getDate()).padStart(
+                        2,
+                        "0",
+                      )} / ${String(date.getHours()).padStart(2, "0")}:${String(
+                        date.getMinutes(),
+                      ).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
+                      
+                      return (
+                        <tr key={index}>
+                          <td className="py-1 hover:bg-black/20">
+                            {formattedDate}
+                            <Countdown 
+                                duration={parseInt(item.duration)} 
+                                originDate={item.date}
+                                onComplete={() => {
+                                  // Handle the post-countdown logic here
+                                  console.log();
+                                }} 
+                              />
+                          </td>
+                          <td className="py-1 hover:bg-black/20">{item.prediction}</td>
+                          <td className="py-1 hover:bg-black/20">{item.amount}</td>
+                          <td className="py-1 hover:bg-black/20">{item.profit}</td>
+                          <td className="py-1 hover:bg-black/20">{item.result}</td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td className="py-1 hover:bg-black/20" colSpan={6}>No Data</td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td className="py-1 hover:bg-black/20" colSpan={6}>No Data</td> {/* Adjusted colspan based on the number of columns */}
-                  </tr>
-                )}
-              </tbody>;
+                  )}
+                </tbody>
             </table>
           </div>
         </div>

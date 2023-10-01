@@ -20,7 +20,7 @@ function Deposit() {
   const [amount, setAmount] = useState('')
   const [usserBalance,setUserBalance] = useState(0)
 
-const [show,setShow] = useState(false)
+  const [show,setShow] = useState(false)
   
   useEffect(() => {
     getBalance()
@@ -61,201 +61,187 @@ setUserBalance(res.data.wallet)
 
   const { isOpen, open, close, setDefaultChain } = useWeb3Modal()
 
-  const depositAmountWithMatic = async (e) => {
-    e.preventDefault()
+const depositAmountWithMatic = async (e) => {
+    e.preventDefault();
+
     try {
-      var web3 = new Web3(window.ethereum);
+        const web3 = new Web3(window.ethereum);
 
-      if (amount <= 0) {
-
-        toast.error('Amount should be greater than Zero..!!')
-        return
-      }
-      let userBalannce = await web3.eth.getBalance(address)
-
-
-      let price = amount * 10 ** 18
-      if (price > userBalannce) {
-
-        toast.error('Insufficient fund..!!')
-        return
-      }
-      let gasPrice = await web3.eth.getGasPrice();
-
-      let gasLimit = await web3.eth.estimateGas({
-        gasPrice: web3.utils.toHex(gasPrice),
-        to: config.adminAddress,
-        from: address,
-        value: price,
-      });
-
-      let trx = await web3.eth.sendTransaction({
-        gasPrice: web3.utils.toHex(gasPrice),
-        gas: web3.utils.toHex(gasLimit),
-        to: config.adminAddress,
-        from: address,
-        value: price,
-      });
-      if (trx.transactionHash) {
-
-        let data = { "amount": amount }
-
-        const config1 = {
-          method: 'put', // HTTP method (PUT in this case)
-          url: `${config.apiKey}deposit`,   // The API endpoint
-          headers: {
-            'Authorization': `Bearer ${x}`, // Set the bearer token in the "Authorization" header
-            'Content-Type': 'application/json', // Set the content type if needed
-          },
-          data: data, // The data you want to send in the request body
-        };
-
-        let res = await axios(config1)
-        // .then(response => {
-        //   // Handle the success response here.
-        //   toast.success( response.data.message);
-        // })
-        // .catch(error => {
-        //   // Handle errors here.
-        //   toast.error(error);
-        // });
-        if (res.response) {
-          toast.error(res.response.data.message);
-        } else {
-          toast.success(res.data.message);
+        if (parseFloat(amount) <= 0) {
+            toast.error('Amount should be greater than Zero..!!');
+            return;
         }
 
-      }
+        const userBalanceEther = parseFloat(web3.utils.fromWei(await web3.eth.getBalance(address), 'ether'));
+        const priceEther = parseFloat(amount);
+
+        if (priceEther > userBalanceEther) {
+            toast.error('Insufficient fund..!!');
+            return;
+        }
+
+        const price = web3.utils.toWei(amount.toString(), 'ether');
+        const gasPrice = await web3.eth.getGasPrice();
+        const gasLimit = await web3.eth.estimateGas({
+            gasPrice: web3.utils.toHex(gasPrice),
+            to: config.adminAddress,
+            from: address,
+            value: price,
+        });
+
+        const trx = await web3.eth.sendTransaction({
+            gasPrice: web3.utils.toHex(gasPrice),
+            gas: web3.utils.toHex(gasLimit),
+            to: config.adminAddress,
+            from: address,
+            value: price,
+        });
+
+        if (trx.transactionHash) {
+            const apiConfig = {
+                method: 'put',
+                url: `${config.apiKey}deposit`,
+                headers: {
+                    'Authorization': `Bearer ${x}`,
+                    'Content-Type': 'application/json',
+                },
+                data: { "amount": amount },
+            };
+
+            const response = await axios(apiConfig);
+            if (response.data.error) {
+                toast.error(response.data.message);
+            } else {
+                toast.success(response.data.message);
+            }
+        }
     } catch (error) {
-      console.log(error)
-      toast.error(error.response.data.message);
-
+        console.error(error);
+        if (error.response && error.response.data && error.response.data.message) {
+            toast.error(error.response.data.message);
+        } else if (error.message) {
+            toast.error(error.message);
+        } else {
+            toast.error("An error occurred. Please try again.");
+        }
     }
-  }
+}
 
-  const depositAmountWithUsdt = async (e) => {
-    e.preventDefault()
-    
-    try {
-      // setShow(true)
-      // return
-      var web3 = new Web3(window.ethereum);
-      let contractObject = new web3.eth.Contract(config.usdtABI, config.usdtAddress);
-     
 
-      if (amount <= 0) {
+const depositAmountWithUsdt = async (e) => {
+  e.preventDefault();
 
-        toast.error('Amount should be greater than Zero..!!')
-        return
+  try {
+      const web3 = new Web3(window.ethereum);
+      const contractObject = new web3.eth.Contract(config.usdtABI, config.usdtAddress);
+
+      if (parseFloat(amount) <= 0) {
+          toast.error('Amount should be greater than Zero..!!');
+          return;
       }
-      let userBalance = await contractObject.methods.balanceOf(address).call()
-   
 
-      let price = amount * 10 ** 18
+      const userBalanceInEther = parseFloat(web3.utils.fromWei(await contractObject.methods.balanceOf(address).call(), 'ether'));
+      const priceInEther = parseFloat(amount);
 
-
-      if (price > userBalance) {
-
-        toast.error('Insufficient fund..!!')
-        return
+      if (priceInEther > userBalanceInEther) {
+          toast.error('Insufficient fund..!!');
+          return;
       }
-      let transfer = await contractObject.methods.transfer(config.adminAddress, price.toString());
 
-      let encoded_tx = transfer.encodeABI();
+      const price = web3.utils.toWei(amount.toString(), 'ether');
+      const transfer = contractObject.methods.transfer(config.adminAddress, price);
+      const encoded_tx = transfer.encodeABI();
 
-      let gasPrice = await web3.eth.getGasPrice();
-
-      let gasLimit = await web3.eth.estimateGas({
-        gasPrice: web3.utils.toHex(gasPrice),
-        to: config.usdtAddress,
-        from: address,
-        data: encoded_tx,
+      const gasPrice = await web3.eth.getGasPrice();
+      const gasLimit = await web3.eth.estimateGas({
+          gasPrice: web3.utils.toHex(gasPrice),
+          to: config.usdtAddress,
+          from: address,
+          data: encoded_tx,
       });
 
-      let trx = await web3.eth.sendTransaction({
-        gasPrice: web3.utils.toHex(gasPrice),
-        gas: web3.utils.toHex(gasLimit),
-        to: config.usdtAddress,
-        from: address,
-        data: encoded_tx,
+      const trx = await web3.eth.sendTransaction({
+          gasPrice: web3.utils.toHex(gasPrice),
+          gas: web3.utils.toHex(gasLimit),
+          to: config.usdtAddress,
+          from: address,
+          data: encoded_tx,
       });
 
       if (trx.transactionHash) {
+          const config1 = {
+              method: 'put',
+              url: `${config.apiKey}deposit`,
+              headers: {
+                  'Authorization': `Bearer ${x}`,
+                  'Content-Type': 'application/json',
+              },
+              data: { "amount": amount },
+          };
 
-        let data = { "amount": amount }
-
-        const config1 = {
-          method: 'put', // HTTP method (PUT in this case)
-          url: `${config.apiKey}deposit`,   // The API endpoint
-          headers: {
-            'Authorization': `Bearer ${x}`, // Set the bearer token in the "Authorization" header
-            'Content-Type': 'application/json', // Set the content type if needed
-          },
-          data: data, // The data you want to send in the request body
-        };
-
-        let res = await axios(config1)
-        // .then(response => {
-        //   // Handle the success response here.
-        //   toast.success( response.data.message);
-        // })
-        // .catch(error => {
-        //   // Handle errors here.
-        //   toast.error(error);
-        // });
-        if (res.response) {
-          toast.error(res.response.data.message);
-        } else {
-          toast.success(res.data.message);
-          setTimeout(() => {
-            window.location.reload(true);
-          }, 2000);
-        }
-
+          const response = await axios(config1);
+          if (response.data.error) {
+              toast.error(response.data.message);
+          } else {
+              toast.success(response.data.message);
+              setTimeout(() => {
+                  window.location.reload(true);
+              }, 2000);
+          }
       }
-    } catch (error) {
-      console.log(error)
-      //toast.error(error.response?error.response.data.message:error.data?error.data:error.message);
-
-    }
-  }
-
-
-  const showToast=async(res)=>{
-    if(res){
-      let data = { "amount": amount }
-
-      const config1 = {
-        method: 'put', // HTTP method (PUT in this case)
-        url: `${config.apiKey}deposit`,   // The API endpoint
-        headers: {
-          'Authorization': `Bearer ${x}`, // Set the bearer token in the "Authorization" header
-          'Content-Type': 'application/json', // Set the content type if needed
-        },
-        data: data, // The data you want to send in the request body
-      };
-
-      let res = await axios(config1)
-      // .then(response => {
-      //   // Handle the success response here.
-      //   toast.success( response.data.message);
-      // })
-      // .catch(error => {
-      //   // Handle errors here.
-      //   toast.error(error);
-      // });
-      if (res.response) {
-        toast.error(res.response.data.message);
+  } catch (error) {
+      console.error(error);
+      if (error.response && error.response.data && error.response.data.message) {
+          toast.error(error.response.data.message);
+      } else if (error.message) {
+          toast.error(error.message);
       } else {
-        toast.success(res.data.message);
+          toast.error("An error occurred. Please try again.");
       }
-     // toast.success("transaction succesful")
-      setShow(false)
-    }else{
-  toast.error("transaction failed")
-  setShow(false)
   }
-  }
+}
+
+
+
+
+  const showToast = async (transactionSuccessful) => {
+    if (transactionSuccessful) {
+        let data = { "amount": amount };
+
+        const config1 = {
+            method: 'put',
+            url: `${config.apiKey}deposit`,
+            headers: {
+                'Authorization': `Bearer ${x}`,
+                'Content-Type': 'application/json',
+            },
+            data: data,
+        };
+
+        try {
+            let response = await axios(config1);
+            // Assuming if there's an 'error' field in the response data, it indicates an error
+            if (response.data.error) {
+                toast.error(response.data.message);
+            } else {
+                toast.success(response.data.message);
+            }
+        } catch (error) {
+            if (error.response && error.response.data && error.response.data.message) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error("An error occurred. Please try again.");
+            }
+        } finally {
+            setShow(false);
+        }
+
+    } else {
+        toast.error("Transaction failed");
+        setShow(false);
+    }
+}
+
 
   return (
     <>
@@ -307,8 +293,6 @@ setUserBalance(res.data.wallet)
                   >
                     Connect Wallet
                   </button>}
-
-{/* {show&&<  SendTrx   amount={amount*10**18} showToast={showToast}/>} */}
 
               </div>
 

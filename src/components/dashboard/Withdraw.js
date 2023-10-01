@@ -19,20 +19,12 @@ function Withdraw() {
   useEffect(() => {
     getBalance()
 
-  //   setInterval(() => {
-  //   getBalance()
-  // }, 1000);
-
   }, []);
 
   const getBalance=async()=>{
       const config1 = {
       method: 'get', // HTTP method (PUT in this case)
       url: `${config.apiKey}getuserdetails?email=${userEmail}`,   // The API endpoint
-      // headers: {
-      //   'Authorization': `Bearer ${x}`, // Set the bearer token in the "Authorization" header
-      //   'Content-Type': 'application/json', // Set the content type if needed
-      // },
     };
 
   let res=  await axios(config1)
@@ -76,14 +68,7 @@ if(res.response){
       };
 
       let res = await axios(config1)
-      // .then(response => {
-      //   // Handle the success response here.
-      //   toast.success( response.data.message);
-      // })
-      // .catch(error => {
-      //   // Handle errors here.
-      //   toast.error(error);
-      // });
+
       if (res.response) {
         toast.error(res.response.data.message);
       } else {

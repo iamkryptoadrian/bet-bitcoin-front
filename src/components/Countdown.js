@@ -7,6 +7,7 @@ const Countdown = ({ duration, originDate, onComplete }) => {
 
   const [secondsLeft, setSecondsLeft] = useState(initialSecondsLeft);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isVisible, setIsVisible] = useState(initialSecondsLeft > 0);
 
   useEffect(() => {
     if (!isCompleted && secondsLeft > 0) {
@@ -17,11 +18,14 @@ const Countdown = ({ duration, originDate, onComplete }) => {
       return () => clearTimeout(timerId);
     } else if (secondsLeft <= 0 && !isCompleted) {
       setIsCompleted(true);
+      setIsVisible(false);  // Hide the component once the timer completes
       onComplete();
     }
   }, [secondsLeft, onComplete, isCompleted]);
 
   const percentage = ((duration - secondsLeft) / duration) * 100;
+
+  if (!isVisible) return null;  // If not visible, don't render anything
 
   return (
     <div 
