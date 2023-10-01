@@ -344,11 +344,11 @@ function Home() {
                           ).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
                           return formattedDate;
                         })()}
-                          <Countdown 
-                            duration={parseInt(item.duration)} 
-                            originDate={item.date}
-                            onComplete={() => console.log()} 
-                          />
+<Countdown 
+  duration={parseInt(item.duration)} 
+  originDate={item.date}
+  onComplete={() => console.log()} 
+/>
                       </td>
                       <td className="py-1 hover:bg-black/20">{item.prediction}</td>
                       <td className="py-1 hover:bg-black/20">{item.amount}</td>
