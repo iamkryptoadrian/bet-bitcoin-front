@@ -14,7 +14,7 @@ import toast, { Toaster } from "react-hot-toast";
 function Login() {
     var x = localStorage.getItem("token");
     if (x) {
-        window.location.href = `${config.baseUrl}Dashboard`
+        window.location.href = `${config.baseUrl}Dashboard/home`
     }
     const [toggle, setToggle] = useState(0);
     const [form, setForm] = useState({ email: '', password: '' });

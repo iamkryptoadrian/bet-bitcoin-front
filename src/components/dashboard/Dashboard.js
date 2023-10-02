@@ -2,14 +2,11 @@ import React from "react";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import HomeIcon from "@mui/icons-material/Home";
-import SportsEsportsIcon from "@mui/icons-material/SportsEsports";
 import { BiMoneyWithdraw, BiLogOut } from "react-icons/bi";
 import { MdRealEstateAgent } from "react-icons/md";
 import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import config from "../../config";
-import axios from "axios";
-import toast, { Toaster } from "react-hot-toast";
 import logo from '../../image/logo_svg.svg';
 
 
