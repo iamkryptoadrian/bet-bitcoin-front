@@ -5,8 +5,9 @@ import axios from 'axios';
 import toast, { Toaster } from "react-hot-toast";
 import Web3 from 'web3'
 import { useAccount, useDisconnect } from 'wagmi'
-import SendTrx from "./sendTransaction";
 import { useWeb3Modal } from '@web3modal/react'
+
+
 function Deposit() {
   var x = localStorage.getItem("token");
   if (x == null || x == undefined) {
@@ -19,38 +20,58 @@ function Deposit() {
 
   const [amount, setAmount] = useState('')
   const [usserBalance,setUserBalance] = useState(0)
+  const [tokenSymbol, setTokenSymbol] = useState(''); 
+
 
   const [show,setShow] = useState(false)
   
   useEffect(() => {
     getBalance()
-
-  //   setInterval(() => {
-  //   getBalance()
-  // }, 1000);
-
+    getTokenSymbol()
   }, []);
 
-  const getBalance=async()=>{
+  const getBalance = async () => {
     const config1 = {
-    method: 'get', // HTTP method (PUT in this case)
-    url: `${config.apiKey}getuserdetails?email=${userEmail}`,   // The API endpoint
-    // headers: {
-    //   'Authorization': `Bearer ${x}`, // Set the bearer token in the "Authorization" header
-    //   'Content-Type': 'application/json', // Set the content type if needed
-    // },
+        method: 'get',
+        url: `${config.apiKey}getuserdetails?email=${userEmail}`,
+    };
+
+      try {
+          let res = await axios(config1);
+          if (res.status >= 200 && res.status < 300) {
+              setUserBalance(res.data.wallet);
+          } else {
+              // Safety check; Axios would typically treat non-2xx responses as errors and move to the catch block.
+              toast.error(res.data.message || "Unknown error occurred while fetching the balance.");
+          }
+      } catch (error) {
+          console.error(error);
+
+          // Check if error has a response attached (meaning server responded with an error)
+          if (error.response) {
+              switch (error.response.status) {
+                  case 400: // Bad Request
+                      toast.error("Bad request. Please try again.");
+                      break;
+                  case 401: // Unauthorized
+                      toast.error("Unauthorized request. Please check your credentials.");
+                      break;
+                  case 404: // Not Found
+                      toast.error("User details not found. Please ensure the email is correct.");
+                      break;
+                  case 500: // Internal Server Error
+                      toast.error("Server error. Please try again later.");
+                      break;
+                  default:
+                      toast.error("An error occurred while fetching the balance. Please try again.");
+              }
+          } else {
+              // Errors that don't have a response attached (like network errors)
+              toast.error("An error occurred. Please check your network and try again.");
+          }
+      }
   };
 
-let res=  await axios(config1)
-console.log(res)
-if(res.response){
-console.log(res.response.data.message);
-
-}else{
-setUserBalance(res.data.wallet)
-
-}
-}
 
   const handleChange = (e) => {
 
@@ -61,79 +82,27 @@ setUserBalance(res.data.wallet)
 
   const { isOpen, open, close, setDefaultChain } = useWeb3Modal()
 
-const depositAmountWithMatic = async (e) => {
-    e.preventDefault();
+  const web3 = new Web3(window.ethereum);
 
+  const getTokenSymbol = async () => {
+    const tokenContract = new web3.eth.Contract(config.usdtABI, config.tokenAddress);
     try {
-        const web3 = new Web3(window.ethereum);
-
-        if (parseFloat(amount) <= 0) {
-            toast.error('Amount should be greater than Zero..!!');
-            return;
-        }
-
-        const userBalanceEther = parseFloat(web3.utils.fromWei(await web3.eth.getBalance(address), 'ether'));
-        const priceEther = parseFloat(amount);
-
-        if (priceEther > userBalanceEther) {
-            toast.error('Insufficient fund..!!');
-            return;
-        }
-
-        const price = web3.utils.toWei(amount.toString(), 'ether');
-        const gasPrice = await web3.eth.getGasPrice();
-        const gasLimit = await web3.eth.estimateGas({
-            gasPrice: web3.utils.toHex(gasPrice),
-            to: config.adminAddress,
-            from: address,
-            value: price,
-        });
-
-        const trx = await web3.eth.sendTransaction({
-            gasPrice: web3.utils.toHex(gasPrice),
-            gas: web3.utils.toHex(gasLimit),
-            to: config.adminAddress,
-            from: address,
-            value: price,
-        });
-
-        if (trx.transactionHash) {
-            const apiConfig = {
-                method: 'put',
-                url: `${config.apiKey}deposit`,
-                headers: {
-                    'Authorization': `Bearer ${x}`,
-                    'Content-Type': 'application/json',
-                },
-                data: { "amount": amount },
-            };
-
-            const response = await axios(apiConfig);
-            if (response.data.error) {
-                toast.error(response.data.message);
-            } else {
-                toast.success(response.data.message);
-            }
-        }
+        const symbol = await tokenContract.methods.symbol().call();
+        setTokenSymbol(symbol);
     } catch (error) {
-        console.error(error);
-        if (error.response && error.response.data && error.response.data.message) {
-            toast.error(error.response.data.message);
-        } else if (error.message) {
-            toast.error(error.message);
-        } else {
-            toast.error("An error occurred. Please try again.");
-        }
+        console.error("Error fetching token symbol:", error);
     }
 }
 
 
-const depositAmountWithUsdt = async (e) => {
+
+
+const depositAmountWithToken = async (e) => {
   e.preventDefault();
 
   try {
       const web3 = new Web3(window.ethereum);
-      const contractObject = new web3.eth.Contract(config.usdtABI, config.usdtAddress);
+      const contractObject = new web3.eth.Contract(config.usdtABI, config.tokenAddress);
 
       if (parseFloat(amount) <= 0) {
           toast.error('Amount should be greater than Zero..!!');
@@ -155,7 +124,7 @@ const depositAmountWithUsdt = async (e) => {
       const gasPrice = await web3.eth.getGasPrice();
       const gasLimit = await web3.eth.estimateGas({
           gasPrice: web3.utils.toHex(gasPrice),
-          to: config.usdtAddress,
+          to: config.tokenAddress,
           from: address,
           data: encoded_tx,
       });
@@ -163,7 +132,7 @@ const depositAmountWithUsdt = async (e) => {
       const trx = await web3.eth.sendTransaction({
           gasPrice: web3.utils.toHex(gasPrice),
           gas: web3.utils.toHex(gasLimit),
-          to: config.usdtAddress,
+          to: config.tokenAddress,
           from: address,
           data: encoded_tx,
       });
@@ -189,7 +158,7 @@ const depositAmountWithUsdt = async (e) => {
               }, 2000);
           }
       }
-  } catch (error) {
+    } catch (error) {
       console.error(error);
       if (error.response && error.response.data && error.response.data.message) {
           toast.error(error.response.data.message);
@@ -198,8 +167,8 @@ const depositAmountWithUsdt = async (e) => {
       } else {
           toast.error("An error occurred. Please try again.");
       }
+    }
   }
-}
 
 
 
@@ -240,7 +209,7 @@ const depositAmountWithUsdt = async (e) => {
         toast.error("Transaction failed");
         setShow(false);
     }
-}
+  }
 
 
   return (
@@ -258,7 +227,7 @@ const depositAmountWithUsdt = async (e) => {
 
               <div className="my-4  w-full text-center">
                 <h1 className="sm:text-lg text-sm text-gray-100">
-                  Your Total Available Balance : <span>{usserBalance} USDT</span>
+                  Your Total Available Balance : <span>{usserBalance}  {tokenSymbol}</span>
                 </h1>
               </div>
               <div className="relative w-full min-w-[200px] h-16 my-4">
@@ -280,7 +249,7 @@ const depositAmountWithUsdt = async (e) => {
                     className="middle none font-sans font-bold center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none  sm:text-lg text-sm py-3 px-6 rounded-3xl bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/40 active:opacity-[0.85] block w-full"
                     type="button"
                     //onClick={e => { depositAmountWithMatic(e) }}
-                    onClick={e => { depositAmountWithUsdt(e) }}
+                    onClick={e => { depositAmountWithToken(e) }}
                     
                   >
                     Deposit

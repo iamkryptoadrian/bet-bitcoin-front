@@ -38,52 +38,129 @@ function Home() {
 
   const getRateApi = async () => {
     const config1 = {
-      method: "get", // HTTP method (PUT in this case)
-      url: `${config.apiKey}getrate`, // The API endpoint
+        method: "get",
+        url: `${config.apiKey}getrate`,
     };
 
-    let res = await axios(config1);
-    if (res.response) {
-    } else {
-      setRate(res.data.rate);
-    }
-  };
-  const getBalance = async () => {
-    const config1 = {
-      method: "get", // HTTP method (PUT in this case)
-      url: `${config.apiKey}getuserdetails?email=${userEmail}`, // The API endpoint
-      // headers: {
-      //   'Authorization': `Bearer ${x}`, // Set the bearer token in the "Authorization" header
-      //   'Content-Type': 'application/json', // Set the content type if needed
-      // },
-    };
+    try {
+        let res = await axios(config1);
+        if (res.status >= 200 && res.status < 300) {
+            setRate(res.data.rate);
+        } else {
+            // This is a safety check; Axios would typically treat non-2xx responses as errors and move to the catch block.
+            toast.error(res.data.message || "Unknown error occurred while fetching the rate.");
+        }
+    } catch (error) {
+        console.error(error);
 
-    let res = await axios(config1);
-    //console.log(res)
-    if (res.response) {
-      console.log(res.response.data.message);
-    } else {
-      setUserBalance(res.data.wallet);
+        // Check if error has a response attached (meaning server responded with an error)
+        if (error.response) {
+            switch (error.response.status) {
+                case 400: // Bad Request
+                    toast.error("Bad request while fetching the rate.. Please try again.");
+                    break;
+                case 401: // Unauthorized
+                    toast.error("Unauthorized request while fetching the rate.. Please check your credentials.");
+                    break;
+                case 500: // Internal Server Error
+                    toast.error("Server error while fetching the rate.. Please try again later.");
+                    break;
+                default:
+                    toast.error("An error occurred while fetching the rate. Please try again.");
+            }
+        } else {
+            // Errors that don't have a response attached (like network errors)
+            toast.error("An error occurred while fetching the rate.. Please check your network and try again.");
+        }
     }
+};
+
+
+const getBalance = async () => {
+  const config1 = {
+      method: "get",
+      url: `${config.apiKey}getuserdetails?email=${userEmail}`,
   };
 
-  const getBetTransactions = async () => {
-    const config1 = {
-      method: "get", // HTTP method (PUT in this case)
-      url: `${config.apiKey}bettransactions?userId=${userId}`, // The API endpoint
-      // headers: {
-      //   'Authorization': `Bearer ${x}`, // Set the bearer token in the "Authorization" header
-      //   'Content-Type': 'application/json', // Set the content type if needed
-      // },
-    };
+  try {
+      let res = await axios(config1);
+      if (res.status >= 200 && res.status < 300) {
+          setUserBalance(res.data.wallet);
+      } else {
+          // Safety check; Axios would usually treat non-2xx responses as errors and move to the catch block.
+          toast.error(res.data.message || "Unknown error occurred while fetching the balance.");
+      }
+  } catch (error) {
+      console.error(error);
 
-    let res = await axios(config1);
-    if (res.response) {
-      console.log(res.response.data.message);
-    } else {
-      setBetTransactions(res.data);
-    }
+      // Check if error has a response attached (meaning server responded with an error)
+      if (error.response) {
+          switch (error.response.status) {
+              case 400: // Bad Request
+                  toast.error("Bad request while fetching the balance.. Please try again.");
+                  break;
+              case 401: // Unauthorized
+                  toast.error("Unauthorized request while fetching the balance.. Please check your credentials.");
+                  break;
+              case 404: // Not Found
+                  toast.error("User details not found while fetching the balance.. Please ensure the email is correct.");
+                  break;
+              case 500: // Internal Server Error
+                  toast.error("Server error while fetching the balance.. Please try again later.");
+                  break;
+              default:
+                  toast.error("An error occurred while fetching the balance. Please try again.");
+          }
+      } else {
+          // Errors that don't have a response attached (like network errors)
+          toast.error("An error occurred while fetching the balance.. Please check your network and try again.");
+      }
+  }
+};
+
+
+const getBetTransactions = async () => {
+  const config1 = {
+      method: "get",
+      url: `${config.apiKey}bettransactions?userId=${userId}`,
   };
+
+  try {
+      let res = await axios(config1);
+      if (res.status >= 200 && res.status < 300) {
+          setBetTransactions(res.data);
+      } else {
+          // Safety check; Axios would usually treat non-2xx responses as errors and move to the catch block.
+          toast.error(res.data.message || "Unknown error occurred while fetching bet transactions.");
+      }
+  } catch (error) {
+      console.error(error);
+
+      // Check if error has a response attached (meaning server responded with an error)
+      if (error.response) {
+          switch (error.response.status) {
+              case 400: // Bad Request
+                  toast.error("Bad request. Please try again.");
+                  break;
+              case 401: // Unauthorized
+                  toast.error("Unauthorized request. Please check your credentials.");
+                  break;
+              case 404: // Not Found
+                  toast.error("Bet transactions not found for this user.");
+                  break;
+              case 500: // Internal Server Error
+                  toast.error("Server error. Please try again later.");
+                  break;
+              default:
+                  toast.error("An error occurred while fetching the bet transactions. Please try again.");
+          }
+      } else {
+          // Errors that don't have a response attached (like network errors)
+          toast.error("An error occurred. Please check your network and try again.");
+      }
+  }
+};
+
 
   const handleSelectChange = (event) => {
     setSelectedOption(event.target.value); // Update the selected option when the user makes a selection
@@ -120,14 +197,6 @@ function Home() {
         };
 
         let res = await axios(config1);
-        // .then(response => {
-        //   // Handle the success response here.
-        //   toast.success( response.data.message);
-        // })
-        // .catch(error => {
-        //   // Handle errors here.
-        //   toast.error(error);
-        // });
         console.log(res);
         if (res.response) {
           toast.error(res.response.data.message);

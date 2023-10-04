@@ -11,9 +11,7 @@ function Withdraw() {
     window.location.href = `${config.baseUrl}`
   }
   const [form, setForm] = useState({ "amount": '', "wallet": '' })
-  const [formError, setFromError] = useState({ "amount": '', "wallet": '' })
   const [usserBalance,setUserBalance] = useState(0)
-  var userId = localStorage.getItem("userId");
   var userEmail = localStorage.getItem("email");
 
   useEffect(() => {
@@ -21,23 +19,25 @@ function Withdraw() {
 
   }, []);
 
-  const getBalance=async()=>{
+  const getBalance = async () => {
       const config1 = {
-      method: 'get', // HTTP method (PUT in this case)
-      url: `${config.apiKey}getuserdetails?email=${userEmail}`,   // The API endpoint
-    };
+          method: 'get', 
+          url: `${config.apiKey}getuserdetails?email=${userEmail}`,
+      };
 
-  let res=  await axios(config1)
-  console.log(res)
-if(res.response){
-  console.log(res.response.data.message);
+      try {
+          let res = await axios(config1);
+          console.log(res);
+          setUserBalance(res.data.wallet);
+          toast.success('Balance fetched successfully!');  // Success toast notification
+      } catch (error) {
+          // If the request failed, notify the user with a toast
+          const errorMessage = error.response ? error.response.data.message : error.message;
+          console.error('Error fetching balance:', errorMessage);
+          toast.fail(`Error fetching balance: ${errorMessage}`);  // Error toast notification
+      }
+  };
 
-}else{
-  setUserBalance(res.data.wallet)
-
-
-}
-  }
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -45,43 +45,48 @@ if(res.response){
   }
 
   const withdrawAmount = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+
     try {
-      var web3 = new Web3(window.ethereum);
+        var web3 = new Web3(window.ethereum);
 
-      let checkWallet = await web3.utils.isAddress(form.wallet)
-      if (!checkWallet) {
-        toast.error("Wallet address is not valid");
-        return
-      }
+        let checkWallet = await web3.utils.isAddress(form.wallet);
+        if (!checkWallet) {
+            toast.error("Wallet address is not valid");
+            return;
+        }
 
-      let data = { "amount": form.amount, "walletAddress": form.wallet, "email": userEmail }
+        let data = { "amount": form.amount, "walletAddress": form.wallet, "email": userEmail };
 
-      const config1 = {
-        method: 'post', // HTTP method (PUT in this case)
-        url: `${config.apiKey}withdrawalrequest`,   // The API endpoint
-        headers: {
-          'Authorization': `Bearer ${x}`, // Set the bearer token in the "Authorization" header
-          'Content-Type': 'application/json', // Set the content type if needed
-        },
-        data: data, // The data you want to send in the request body
-      };
+        const config1 = {
+            method: 'post',
+            url: `${config.apiKey}withdrawalrequest`,
+            headers: {
+                'Authorization': `Bearer ${x}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'  // Explicitly tell Axios to accept JSON
+            },
+            data: data,
+        };
 
-      let res = await axios(config1)
+        let res = await axios(config1);
 
-      if (res.response) {
-        toast.error(res.response.data.message);
-      } else {
-        toast.success(res.data.message);   
+        // Handle success response
+        toast.success(res.data.message || "Withdrawal successful!");
         setTimeout(() => {
-          window.location.reload(true);
+            window.location.reload(true);
         }, 2000);
-      }
     } catch (error) {
-      console.log(error)
-      toast.error(error.response.data.message);
+        console.error("Error Object:", error);
+
+        // Check if there's a response from the server and use that for the toast message
+        const errorMsg = error.response?.data?.message || "Insufficient Balance";
+        toast.error(errorMsg);
     }
-  }
+}
+
+
+
 
   return (
     <>
