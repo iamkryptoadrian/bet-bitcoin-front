@@ -103,7 +103,7 @@ function Withdraw() {
 
               <div className="my-4  w-full text-center">
                 <h1 className="sm:text-lg text-sm text-gray-100">
-                  Your Total Available Balance : <span>{usserBalance} USDT</span>
+                  Your Total Available Balance : <span>{usserBalance} BB</span>
                 </h1>
               </div>
 
