@@ -30,6 +30,24 @@ function Deposit() {
     getTokenSymbol()
   }, []);
 
+
+
+    // Helper function to extract the error message
+    const extractErrorMessage = (error) => {
+        if (error && error.data && typeof error.data === 'string' && error.data.startsWith('0x')) {
+            try {
+                const errorData = JSON.parse(error.data.slice(2));
+                if (errorData && errorData.message) {
+                    return errorData.message;
+                }
+            } catch (e) {
+                return error.message || "An error occurred. Please try again.";
+            }
+        }
+        return error.message || "An error occurred. Please try again.";
+    }
+
+
   const getBalance = async () => {
     const config1 = {
         method: 'get',
@@ -44,8 +62,10 @@ function Deposit() {
               // Safety check; Axios would typically treat non-2xx responses as errors and move to the catch block.
               toast.error(res.data.message || "Unknown error occurred while fetching the balance.");
           }
-      } catch (error) {
-          console.error(error);
+      }  catch (error) {
+        console.error(error);
+        const errorMessage = extractErrorMessage(error);
+        toast.error(errorMessage);
 
           // Check if error has a response attached (meaning server responded with an error)
           if (error.response) {
@@ -160,13 +180,8 @@ const depositAmountWithToken = async (e) => {
       }
     } catch (error) {
       console.error(error);
-      if (error.response && error.response.data && error.response.data.message) {
-          toast.error(error.response.data.message);
-      } else if (error.message) {
-          toast.error(error.message);
-      } else {
-          toast.error("An error occurred. Please try again.");
-      }
+      const errorMessage = extractErrorMessage(error);
+      toast.error(errorMessage);
     }
   }
 
@@ -196,11 +211,8 @@ const depositAmountWithToken = async (e) => {
                 toast.success(response.data.message);
             }
         } catch (error) {
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(error.response.data.message);
-            } else {
-                toast.error("An error occurred. Please try again.");
-            }
+          const errorMessage = extractErrorMessage(error);
+          toast.error(errorMessage);
         } finally {
             setShow(false);
         }
