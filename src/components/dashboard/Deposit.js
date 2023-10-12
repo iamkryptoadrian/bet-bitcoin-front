@@ -32,20 +32,21 @@ function Deposit() {
 
 
 
-    // Helper function to extract the error message
-    const extractErrorMessage = (error) => {
-        if (error && error.data && typeof error.data === 'string' && error.data.startsWith('0x')) {
-            try {
-                const errorData = JSON.parse(error.data.slice(2));
-                if (errorData && errorData.message) {
-                    return errorData.message;
-                }
-            } catch (e) {
-                return error.message || "An error occurred. Please try again.";
+  const extractErrorMessage = (error) => {
+    // Check if the error is a JSON-RPC error
+    if (error && error.message && error.message.includes("Internal JSON-RPC error.")) {
+        try {
+            const errorData = JSON.parse(error.message.split('\n')[1]);  // Split and get the JSON part
+            if (errorData && errorData.message) {
+                return errorData.message;
             }
+        } catch (e) {
+            return "An error occurred. Please try again.";
         }
-        return error.message || "An error occurred. Please try again.";
     }
+    return error.message || "An error occurred. Please try again.";
+  }
+
 
 
   const getBalance = async () => {
