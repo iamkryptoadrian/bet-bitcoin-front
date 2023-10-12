@@ -34,18 +34,15 @@ function Deposit() {
 
   const extractErrorMessage = (error) => {
     // Check if the error is a JSON-RPC error
-    if (error && error.message && error.message.includes("Internal JSON-RPC error.")) {
-        try {
-            const errorData = JSON.parse(error.message.split('\n')[1]);  // Split and get the JSON part
-            if (errorData && errorData.message) {
-                return errorData.message;
-            }
-        } catch (e) {
-            return "An error occurred. Please try again.";
+    if (error && error.message && error.message.startsWith("Internal JSON-RPC error.")) {
+        const matches = error.message.match(/"message":\s"([^"]+)"/); // Extract the 'message' field using regex
+        if (matches && matches[1]) {
+            return matches[1];
         }
     }
     return error.message || "An error occurred. Please try again.";
   }
+
 
 
 
