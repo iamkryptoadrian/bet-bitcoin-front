@@ -75,8 +75,8 @@ function Deposit() {
               toast.error(res.data.message || "Unknown error occurred while fetching the balance.");
           }
       } catch (error) {
-          console.error(error);
-
+        console.error(error);
+        
           // Check if error has a response attached (meaning server responded with an error)
           if (error.response) {
               switch (error.response.status) {
@@ -195,8 +195,8 @@ const depositAmountWithToken = async (e) => {
       if (error.response && error.response.data && error.response.data.message) {
           toast.error(error.response.data.message);
       } else if (error.message) {
-          toast.error(error.message);
-      } else {
+      toast.error(error.message);
+} else {
           toast.error("An error occurred. Please try again.");
       }
     }
@@ -228,9 +228,9 @@ const depositAmountWithToken = async (e) => {
                 toast.success(response.data.message);
             }
         } catch (error) {
-            if (error.response && error.response.data && error.response.data.message) {
-                toast.error(error.response.data.message);
-            } else {
+          if (error.response && error.response.data && error.response.data.message) {
+          toast.error(error.response.data.message);
+} else {
                 toast.error("An error occurred. Please try again.");
             }
         } finally {
