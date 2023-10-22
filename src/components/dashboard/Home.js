@@ -299,7 +299,7 @@ const getBetTransactions = async () => {
                         : "border border-gray-50"
                     } capitalize  h-full p-2 outline-none absolute px-6 flex justify-center items-center`}
                   >
-                    USDT
+                    BB
                   </span>
                   <label
                     style={{ color: formError.amount ? "red" : "" }}
@@ -326,7 +326,7 @@ const getBetTransactions = async () => {
                         : "border border-gray-50"
                     } capitalize  h-full p-2 outline-none absolute px-6 flex justify-center items-center`}
                   >
-                    USDT
+                    BB
                   </span>
                   <label className="flex text-white w-full h-full select-none pointer-events-none absolute left-0 font-normal peer-placeholder-shown:text-gray-100 leading-tight peer-focus:leading-tight transition-all -top-1.5 peer-placeholder-shown:text-[18px] text-[11px] peer-focus:text-[11px] before:content[' '] before:block before:box-border before:w-2.5 before:h-1.5 before:mt-[6.5px] before:mr-1 peer-placeholder-shown:before:border-transparent before:rounded-tl-md before:border-t peer-focus:before:border-t-2 before:border-l peer-focus:before:border-l-2 before:pointer-events-none before:transition-all after:content[' '] after:block after:flex-grow after:box-border after:w-2.5 after:h-1.5 after:mt-[6.5px] after:ml-1 peer-placeholder-shown:after:border-transparent after:rounded-tr-md after:border-t peer-focus:after:border-t-2 after:border-r peer-focus:after:border-r-2 after:pointer-events-none after:transition-all peer-placeholder-shown:leading-[4.1] text-blue-gray-400 peer-focus:text-blue-500 before:border-blue-gray-200 peer-focus:before:border-blue-500 after:border-blue-gray-200 peer-focus:after:border-blue-500">
                     Wallet
