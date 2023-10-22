@@ -8,6 +8,7 @@ import { useAccount, useDisconnect } from 'wagmi'
 import { useWeb3Modal } from '@web3modal/react'
 
 
+
 function Deposit() {
   var x = localStorage.getItem("token");
   if (x == null || x == undefined) {
@@ -17,18 +18,47 @@ function Deposit() {
   var userId = localStorage.getItem("userId");
   var userEmail = localStorage.getItem("email");
 
-
   const [amount, setAmount] = useState('')
   const [usserBalance,setUserBalance] = useState(0)
   const [tokenSymbol, setTokenSymbol] = useState(''); 
-
+  const [contractAddress, setContractAddress] = useState("");
 
   const [show,setShow] = useState(false)
   
   useEffect(() => {
     getBalance()
-    getTokenSymbol()
+    getContractAddress()
   }, []);
+
+  useEffect(() => {
+    if (contractAddress) { // Making sure contractAddress is not empty
+      getTokenSymbol();
+    }
+  }, [contractAddress]); // Re-run this effect if contractAddress changes
+  
+
+
+  const getContractAddress = async () => {
+    const config1 = {
+        method: 'get',
+        url: `${config.apiKey}tokenAddress`,
+    };
+
+      try {
+          let res = await axios(config1);
+          
+          if (res.status >= 200 && res.status < 300) {
+            setContractAddress(res.data[0].tokenAddress);
+            console.log(res.data[0].tokenAddress)
+          } else {
+              // Safety check; Axios would typically treat non-2xx responses as errors and move to the catch block.
+              toast.error(res.data.message || "Unknown error occurred while fetching the balance.");
+          }
+      } catch (error) {
+          console.error(error);
+      }
+  };
+
 
   const getBalance = async () => {
     const config1 = {
@@ -82,10 +112,12 @@ function Deposit() {
 
   const { isOpen, open, close, setDefaultChain } = useWeb3Modal()
 
+
   const web3 = new Web3(window.ethereum);
 
   const getTokenSymbol = async () => {
-    const tokenContract = new web3.eth.Contract(config.usdtABI, config.tokenAddress);
+    const tokenContract = new web3.eth.Contract(config.usdtABI, contractAddress);
+    
     try {
         const symbol = await tokenContract.methods.symbol().call();
         setTokenSymbol(symbol);
@@ -102,7 +134,7 @@ const depositAmountWithToken = async (e) => {
 
   try {
       const web3 = new Web3(window.ethereum);
-      const contractObject = new web3.eth.Contract(config.usdtABI, config.tokenAddress);
+      const contractObject = new web3.eth.Contract(config.usdtABI, contractAddress);
 
       if (parseFloat(amount) <= 0) {
           toast.error('Amount should be greater than Zero..!!');
@@ -124,7 +156,7 @@ const depositAmountWithToken = async (e) => {
       const gasPrice = await web3.eth.getGasPrice();
       const gasLimit = await web3.eth.estimateGas({
           gasPrice: web3.utils.toHex(gasPrice),
-          to: config.tokenAddress,
+          to: contractAddress,
           from: address,
           data: encoded_tx,
       });
@@ -132,7 +164,7 @@ const depositAmountWithToken = async (e) => {
       const trx = await web3.eth.sendTransaction({
           gasPrice: web3.utils.toHex(gasPrice),
           gas: web3.utils.toHex(gasLimit),
-          to: config.tokenAddress,
+          to: contractAddress,
           from: address,
           data: encoded_tx,
       });
